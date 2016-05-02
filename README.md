@@ -5,7 +5,7 @@ Small NAS with very low power consumption, running Samba for file sharing on LAN
 Tree script is being run each boot (no cron job, in the present moment)
 
 WDPi Project image:
-![alt tag](https://github.com/tomasgal/WDPi/blob/master/wdpi.gif)
+![WDPi](https://github.com/tomasgal/WDPi/blob/master/wdpi.gif)
 
 Hardware:
 - Western Digital [2.5” SATA to Raspberry Pi Adapter] (http://wdlabs.wd.com/products/sata-adapter-board/)
