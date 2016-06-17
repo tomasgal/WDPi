@@ -17,4 +17,4 @@ WDPi Project image:
 - Raspbian serving samba share and MiniHTTP
  
 WDPi picture of later version>
-![WDPi](https://github.com/tomasgal/WDPi/blob/master/wdpi_rev1.png)
+![WDPi](https://github.com/tomasgal/WDPi/blob/master/wdpi_rev1.jpg)
