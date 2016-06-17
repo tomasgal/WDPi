@@ -10,8 +10,11 @@ WDPi Project image:
 ###Hardware
 - Western Digital [2.5” SATA to Raspberry Pi Adapter] (http://wdlabs.wd.com/products/sata-adapter-board/)
 - Raspberry Pi Foundation [Compute Module] (https://www.raspberrypi.org/blog/raspberry-pi-compute-module-new-product/)
-- Edimax [EW-7811Un] (http://www.edimax.com/edimax/merchandise/merchandise_detail/data/edimax/global/wireless_adapters_n150/ew-7811un)
+- Edimax ED600
 - Western Digital [2.5” Red, 1TB] (http://www.wdc.com/wdproducts/library/SpecSheet/ENG/2879-800001.pdf)
 
 ###Software 
 - Raspbian serving samba share and MiniHTTP
+ 
+WDPi picture of later version>
+![WDPi](https://github.com/tomasgal/WDPi/blob/master/wdpi_rev1.png)
