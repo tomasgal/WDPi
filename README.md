@@ -14,4 +14,4 @@ WDPi Project image:
 - Western Digital [2.5” Red, 1TB] (http://www.wdc.com/wdproducts/library/SpecSheet/ENG/2879-800001.pdf)
 
 ###Software 
-- Raspbian serving samba share and lightHTTP
+- Raspbian serving samba share and MiniHTTP
