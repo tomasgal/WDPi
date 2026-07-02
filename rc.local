@@ -10,6 +10,13 @@
 # bits.
 #
 # By default this script does nothing.
+#
+# WDPi notes:
+# - mount the attached storage device at /nas,
+# - bind the same directory into mini_httpd's web root,
+# - apply HDD power-management settings,
+# - generate a static HTML directory tree,
+# - start mini_httpd after a short delay.
 
 # Print the IP address
 _IP=$(hostname -I) || true
@@ -17,9 +24,19 @@ if [ "$_IP" ]; then
   printf "My IP address is %s\n" "$_IP"
 fi
 
-mount -t ext4 -o rw /dev/sda1 /nas 
+# Mount the NAS data partition.
+mount -t ext4 -o rw /dev/sda1 /nas
+
+# Expose the mounted directory through mini_httpd.
 mount --bind /nas /usr/share/mini-httpd/html
+
+# Configure HDD standby and power-management behavior.
 hdparm -S 12 /dev/sda1 && hdparm -B50 /dev/sda
+
+# Generate a static HTML tree view of the first two directory levels.
 tree /nas -L 2 -HC . -T "Trash Archive" -o /nas/tree.html &
-sleep 30 && service mini-httpd start 
+
+# Give the storage and generated tree output time to settle before starting mini_httpd.
+sleep 30 && service mini-httpd start
+
 exit 0
