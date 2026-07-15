@@ -2,25 +2,20 @@
 
 Western Digital / Raspberry Pi Compute Module based mini NAS.
 
-WDPi is a small, low-power NAS build based on a Raspberry Pi Compute Module 3 and a Western Digital SATA adapter board. It provides basic file sharing on a local network through Samba and a lightweight read-only web view through MiniHTTPD.
+WDPi began as a small, low-power NAS build based on a Raspberry Pi Compute Module 3 and a Western Digital SATA adapter board. The original setup provided Samba file sharing on the local network and a lightweight read-only directory view through MiniHTTPD.
 
-The device is still functional in the sense that the original hardware is connected to a local network and performs its intended role. The project is not actively maintained as a current software distribution: the operating system, system libraries, and installed applications reflect the original deployment era and are not kept up to date here.
+The same device has remained in continuous practical use since the original deployment. This repository therefore serves two related purposes:
 
-## Project status
+- it preserves the original hardware build and boot-time configuration;
+- it documents the server's later evolution as a Samba and FTP storage appliance.
 
-This repository is best understood as a historical hardware build log and configuration snapshot. It is not a ready-made NAS distribution and should not be deployed on an untrusted network without modernization.
+In July 2026, the existing server configuration was consolidated and a new dedicated scan-to-FTP destination was added for a network multifunction printer.
 
-The repository may still be useful for hobbyists interested in:
+This is a historical build log and a sanitized configuration snapshot, not a maintained NAS distribution or a secure-by-default deployment image.
 
-- Raspberry Pi Compute Module based storage builds,
-- the historical Western Digital SATA adapter board,
-- low-power local NAS experiments,
-- USB Wi-Fi compatibility notes from the Raspberry Pi Linux ecosystem of that period,
-- simple Samba and MiniHTTPD based file access.
+## Original project
 
-## Overview
-
-The basic topology is:
+The original topology was:
 
 ```text
 2.5" SATA disk
@@ -32,14 +27,14 @@ The basic topology is:
 
 The USB Wi-Fi adapter was an important part of the build. At the time, Raspberry Pi Linux did not work reliably with every USB Wi-Fi device, especially among faster adapters, so documenting a working adapter had practical value for other hobbyists.
 
-## Hardware
+### Original hardware
 
-- Western Digital [2.5” SATA to Raspberry Pi Adapter](http://wdlabs.wd.com/products/sata-adapter-board/)
+- Western Digital [2.5-inch SATA to Raspberry Pi Adapter](http://wdlabs.wd.com/products/sata-adapter-board/)
 - Raspberry Pi Foundation [Compute Module 3](https://www.raspberrypi.org/blog/raspberry-pi-compute-module-new-product/)
 - Edimax ED600 USB Wi-Fi adapter
 - Seagate SSHD 1 TB
 
-## Software
+### Original software and services
 
 - Raspbian
 - Samba for LAN file sharing
@@ -47,33 +42,60 @@ The USB Wi-Fi adapter was an important part of the build. At the time, Raspberry
 - `tree` for generating a static HTML directory listing at boot
 - `hdparm` for HDD power-management settings
 
-## Boot-time behavior
+## Historical boot-time behavior
 
-The included `rc.local` file documents the original boot-time workflow:
+The included [`rc.local`](rc.local) file records the original workflow:
 
-1. print the current IP address,
-2. mount the attached storage device at `/nas`,
-3. bind-mount `/nas` into MiniHTTPD's web root,
-4. apply HDD standby and power-management settings with `hdparm`,
-5. generate a static HTML directory tree with `tree`,
+1. print the current IP address;
+2. mount the attached storage device at `/nas`;
+3. bind-mount `/nas` into MiniHTTPD's web root;
+4. apply HDD standby and power-management settings with `hdparm`;
+5. generate a static HTML directory tree with `tree`;
 6. start MiniHTTPD after a short delay.
 
-The generated tree output is written to:
+The generated directory snapshot was written to:
 
 ```text
 /nas/tree.html
 ```
 
-In the original setup this was a simple boot-time snapshot, not a cron-based recurring refresh.
+This was a boot-time snapshot rather than a recurring cron task. The historical [`mini-httpd.conf`](mini-httpd.conf) is retained as an anonymized example.
 
-## Network services
+## Current deployment (2026)
 
-The build exposes files in two simple ways:
+The continuously used device now operates primarily as a small Samba and FTP storage server. Its current logical layout includes:
 
-- Samba provides file sharing on the local network.
-- MiniHTTPD serves a lightweight web-accessible directory view.
+- Samba file sharing for authenticated users on the local network;
+- vsftpd access with separate authenticated and anonymous policies;
+- two personal areas, each writable by its owner and readable by the other authenticated user;
+- a common `share` area that authenticated users can modify and anonymous FTP users can only read;
+- an anonymous read/write `upload` area stored on a separate USB flash drive;
+- an isolated FTP account and directory added in July 2026 for a Pantum multifunction printer's scan-to-FTP function;
+- read-only access for the human users to files created by the printer;
+- POSIX ACLs and default ACLs implementing the directory-level access model;
+- UUID-based mounts in `/etc/fstab`;
+- a systemd dependency preventing vsftpd from starting before both data filesystems are mounted.
 
-The `mini-httpd.conf` file is kept as an example configuration. Any local IP addresses in the public repository should be treated as documentation placeholders and replaced with the actual LAN address of the device.
+For the printer account, FTP path `/` maps directly to its private physical directory. The printer cannot see the shared, upload or personal areas. The server-side login and upload path have been tested; an actual scan initiated at the printer remains an on-site acceptance test.
+
+The public repository intentionally excludes passwords, password hashes, public hostnames, routable addresses, real filesystem UUIDs and private filenames.
+
+Detailed current documentation is available in:
+
+- [`docs/current-deployment.md`](docs/current-deployment.md) — storage topology, services and access model;
+- [`docs/maintenance-2026-07-15.md`](docs/maintenance-2026-07-15.md) — consolidated maintenance and validation record;
+- [`config/`](config/) — sanitized examples of the active Samba, vsftpd, PAM, ACL, mount and systemd configuration.
+
+## Repository layout
+
+```text
+README.md                         Historical and current project overview
+rc.local                         Historical boot workflow
+mini-httpd.conf                  Historical MiniHTTPD example
+config/                          Sanitized current configuration examples
+docs/current-deployment.md       Current topology and access model
+docs/maintenance-2026-07-15.md   Consolidated maintenance record
+```
 
 ## Images
 
@@ -85,18 +107,16 @@ WDPi picture of later version:
 
 ![WDPi later version](wdpi_rev1.jpg)
 
-## Known limitations
+## Current limitations
 
-- This is an old hardware/software snapshot, not an actively maintained NAS image.
-- The operating system and packages are not updated as part of this repository.
-- MiniHTTPD and the static `tree.html` view are minimal convenience tools, not a modern web file manager.
-- The boot workflow depends on historical device naming such as `/dev/sda` and `/dev/sda1`; modern deployments should use UUIDs, labels, or systemd mount units.
-- The `rc.local` approach reflects the original deployment era. A current Linux setup would normally use systemd units and explicit dependencies.
-- The `tree.html` output is generated at boot only unless the workflow is extended.
-- Do not expose this setup directly to the public internet without a security review, authentication, current packages, firewalling, and transport security.
+- The operating system and many packages reflect the original deployment era and are obsolete.
+- The current FTP configuration uses unencrypted FTP for compatibility with legacy and embedded clients.
+- Anonymous write access is intentionally restricted to one ACL-controlled upload filesystem.
+- The repository configurations are sanitized examples and must be reviewed before use on another system.
+- This setup should not be exposed to an untrusted network without current packages, restricted network access, firewalling, logging, transport security and a fresh security review.
 
 ## Authorship and media rights
 
 Project documentation and photographs by Tomáš Gál, unless otherwise noted.
 
-External project links are included for hardware identification and historical context.
+External project links and product names are included for hardware identification and historical context.

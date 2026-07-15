@@ -1,0 +1,46 @@
+# Sanitized example based on the current WDPi deployment.
+# Review every directive before use on another host.
+
+anonymous_enable=YES
+listen=YES
+local_enable=YES
+write_enable=YES
+local_umask=022
+chroot_local_user=YES
+
+dirmessage_enable=YES
+use_localtime=YES
+xferlog_enable=YES
+secure_chroot_dir=/var/run/vsftpd/empty
+pam_service_name=vsftpd
+
+# TLS is not enabled in the current compatibility setup.
+rsa_cert_file=/etc/ssl/private/vsftpd.pem
+
+# Authenticated users normally start at the shared tree.
+local_root=/ftp
+
+# Anonymous FTP starts at the same physical root; ACLs restrict access.
+anon_root=/ftp
+anon_max_rate=2048000
+anon_upload_enable=YES
+anon_mkdir_write_enable=YES
+anon_other_write_enable=YES
+
+# Required because anonymous read access is granted through POSIX ACLs,
+# not through world-readable mode bits.
+anon_world_readable_only=NO
+
+# Positive login allowlist and per-user overrides.
+userlist_enable=YES
+userlist_deny=NO
+userlist_file=/etc/vsftpd.user_list
+user_config_dir=/etc/vsftpd_user_conf
+
+# Hide numeric ownership details and system recovery directories.
+hide_ids=YES
+hide_file={lost+found}
+deny_file={lost+found}
+
+# Generic public banner; do not publish a real public hostname here.
+banner_file=/ftp/welcome.msg
