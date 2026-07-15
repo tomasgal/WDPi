@@ -2,29 +2,42 @@
 
 Western Digital / Raspberry Pi Compute Module based mini NAS.
 
-WDPi is a small, low-power NAS build based on a Raspberry Pi Compute Module 3 and a Western Digital SATA adapter board. It provides basic file sharing on a local network through Samba and a lightweight read-only web view through MiniHTTPD.
-
-The device is still functional in the sense that the original hardware is connected to a local network and performs its intended role. The project is not actively maintained as a current software distribution: the operating system, system libraries, and installed applications reflect the original deployment era and are not kept up to date here.
+WDPi is a small, low-power storage server based on a Raspberry Pi Compute Module 3 and a Western Digital storage adapter. The repository began as a build log for a simple Samba and MiniHTTPD NAS. The original device remains operational, but its present-day role has expanded to include controlled FTP access and a dedicated scan-to-FTP drop location.
 
 ## Project status
 
-This repository is best understood as a historical hardware build log and configuration snapshot. It is not a ready-made NAS distribution and should not be deployed on an untrusted network without modernization.
+This repository is a historical hardware build log and a sanitized configuration snapshot of a still-running personal server. It is not a maintained NAS distribution or a secure-by-default deployment image.
 
-The repository may still be useful for hobbyists interested in:
+The installed operating system and much of the software reflect the original deployment era. The example configurations document the current logical arrangement, but they must be reviewed before use on another host.
 
-- Raspberry Pi Compute Module based storage builds,
-- the historical Western Digital SATA adapter board,
-- low-power local NAS experiments,
-- USB Wi-Fi compatibility notes from the Raspberry Pi Linux ecosystem of that period,
-- simple Samba and MiniHTTPD based file access.
+## Current use
 
-## Overview
+The current deployment provides:
 
-The basic topology is:
+- Samba file sharing for authenticated users on the local network;
+- vsftpd access with separate authenticated and anonymous policies;
+- a read-only shared FTP area;
+- an anonymous read/write upload area on a separate USB flash drive;
+- two personal areas with owner read/write and reciprocal read-only access;
+- an isolated FTP account and directory intended for a multifunction printer's scan-to-FTP feature;
+- UUID-based data mounts managed through `/etc/fstab`;
+- a systemd dependency that prevents vsftpd from starting before both data filesystems are mounted.
+
+No passwords, password hashes, public hostnames, routable addresses, real filesystem UUIDs, or private data are included in this repository.
+
+See:
+
+- [`docs/current-deployment.md`](docs/current-deployment.md) for the current topology and access model;
+- [`docs/maintenance-2026-07-15.md`](docs/maintenance-2026-07-15.md) for the consolidated maintenance record;
+- [`config/`](config/) for sanitized configuration examples.
+
+## Historical overview
+
+The original topology was:
 
 ```text
 2.5" SATA disk
-    -> Western Digital SATA adapter board
+    -> Western Digital storage adapter
     -> Raspberry Pi Compute Module 3
     -> local network
     -> Samba share and MiniHTTPD directory view
@@ -34,46 +47,43 @@ The USB Wi-Fi adapter was an important part of the build. At the time, Raspberry
 
 ## Hardware
 
-- Western Digital [2.5” SATA to Raspberry Pi Adapter](http://wdlabs.wd.com/products/sata-adapter-board/)
-- Raspberry Pi Foundation [Compute Module 3](https://www.raspberrypi.org/blog/raspberry-pi-compute-module-new-product/)
-- Edimax ED600 USB Wi-Fi adapter
-- Seagate SSHD 1 TB
+- Western Digital 2.5-inch storage adapter board;
+- Raspberry Pi Foundation Compute Module 3;
+- Edimax USB Wi-Fi adapter;
+- internal hard disk used as the primary data volume;
+- Kingston USB 2.0 flash drive used as the separate FTP upload volume.
+
+The current kernel identifies the main external storage enclosure as a WD My Book device and the upload medium as a Kingston DataTraveler. Device names such as `/dev/sda` and `/dev/sdb` are observational only; persistent mounts use filesystem UUIDs.
 
 ## Software
 
-- Raspbian
-- Samba for LAN file sharing
-- MiniHTTPD for a lightweight web view
-- `tree` for generating a static HTML directory listing at boot
-- `hdparm` for HDD power-management settings
+### Current operational services
 
-## Boot-time behavior
+- Raspbian GNU/Linux 8 (Jessie-era installation);
+- Samba for authenticated LAN file sharing;
+- vsftpd for authenticated and anonymous FTP;
+- POSIX ACLs for directory-level access control;
+- systemd-generated mount units based on `/etc/fstab`.
 
-The included `rc.local` file documents the original boot-time workflow:
+### Historical components retained in the repository
 
-1. print the current IP address,
-2. mount the attached storage device at `/nas`,
-3. bind-mount `/nas` into MiniHTTPD's web root,
-4. apply HDD standby and power-management settings with `hdparm`,
-5. generate a static HTML directory tree with `tree`,
-6. start MiniHTTPD after a short delay.
+- MiniHTTPD for a lightweight web view;
+- `tree` for generating a static HTML directory listing;
+- `hdparm` for disk power-management settings;
+- `rc.local` as documentation of the original boot workflow.
 
-The generated tree output is written to:
+The current configuration documentation focuses on Samba and FTP. The historical `rc.local` and `mini-httpd.conf` files are retained as artifacts of the original deployment.
+
+## Repository layout
 
 ```text
-/nas/tree.html
+README.md                         Project overview
+rc.local                         Historical boot workflow
+mini-httpd.conf                  Historical MiniHTTPD example
+config/                          Sanitized current configuration examples
+docs/current-deployment.md       Current topology and access model
+docs/maintenance-2026-07-15.md   Consolidated maintenance record
 ```
-
-In the original setup this was a simple boot-time snapshot, not a cron-based recurring refresh.
-
-## Network services
-
-The build exposes files in two simple ways:
-
-- Samba provides file sharing on the local network.
-- MiniHTTPD serves a lightweight web-accessible directory view.
-
-The `mini-httpd.conf` file is kept as an example configuration. Any local IP addresses in the public repository should be treated as documentation placeholders and replaced with the actual LAN address of the device.
 
 ## Images
 
@@ -85,18 +95,16 @@ WDPi picture of later version:
 
 ![WDPi later version](wdpi_rev1.jpg)
 
-## Known limitations
+## Security limitations
 
-- This is an old hardware/software snapshot, not an actively maintained NAS image.
-- The operating system and packages are not updated as part of this repository.
-- MiniHTTPD and the static `tree.html` view are minimal convenience tools, not a modern web file manager.
-- The boot workflow depends on historical device naming such as `/dev/sda` and `/dev/sda1`; modern deployments should use UUIDs, labels, or systemd mount units.
-- The `rc.local` approach reflects the original deployment era. A current Linux setup would normally use systemd units and explicit dependencies.
-- The `tree.html` output is generated at boot only unless the workflow is extended.
-- Do not expose this setup directly to the public internet without a security review, authentication, current packages, firewalling, and transport security.
+- The operating system release is obsolete and no longer receives normal security support.
+- The documented FTP service currently uses unencrypted FTP for compatibility with legacy clients and embedded devices.
+- Anonymous write access is intentionally limited to one ACL-controlled upload filesystem.
+- These examples must not be copied to an internet-facing host without current packages, firewalling, restricted exposure, logging, transport security, and a fresh security review.
+- The repository contains no credentials. Accounts and UUIDs in examples are placeholders.
 
 ## Authorship and media rights
 
 Project documentation and photographs by Tomáš Gál, unless otherwise noted.
 
-External project links are included for hardware identification and historical context.
+External project links and product names are included only for hardware identification and historical context.
