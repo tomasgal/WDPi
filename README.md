@@ -4,10 +4,12 @@ Western Digital / Raspberry Pi Compute Module based mini NAS.
 
 WDPi began as a small, low-power NAS build based on a Raspberry Pi Compute Module 3 and a Western Digital SATA adapter board. The original setup provided Samba file sharing on the local network and a lightweight read-only directory view through MiniHTTPD.
 
-The same device is still operational. This repository therefore serves two related purposes:
+The same device has remained in continuous use since the original deployment, although its services and storage layout have evolved over time. This repository therefore serves two related purposes:
 
 - it preserves the original hardware build and boot-time configuration;
-- it documents the server's later use as a Samba and FTP storage appliance, including a dedicated scan-to-FTP destination for a network printer.
+- it documents the server's later use as a Samba and FTP storage appliance.
+
+In July 2026, a dedicated scan-to-FTP destination was added for a network multifunction printer. This scanner integration is a new function layered onto the continuously used server, not part of the original WDPi build.
 
 This is a historical build log and a sanitized configuration snapshot, not a maintained NAS distribution or a secure-by-default deployment image.
 
@@ -61,14 +63,14 @@ This was a boot-time snapshot rather than a recurring cron task. The historical 
 
 ## Current deployment (2026)
 
-The original device now operates primarily as a small Samba and FTP storage server. Its current logical layout includes:
+After years of continuous use, the original device now operates primarily as a small Samba and FTP storage server. Its current logical layout includes:
 
 - Samba file sharing for authenticated users on the local network;
 - vsftpd access with separate authenticated and anonymous policies;
 - two personal areas, each writable by its owner and readable by the other authenticated user;
 - a common `share` area that authenticated users can modify and anonymous FTP users can only read;
 - an anonymous read/write `upload` area stored on a separate USB flash drive;
-- an isolated FTP account and directory for a Pantum multifunction printer's scan-to-FTP function;
+- an isolated FTP account and directory, added in July 2026, for a Pantum multifunction printer's scan-to-FTP function;
 - read-only access for the human users to files created by the printer;
 - POSIX ACLs and default ACLs implementing the directory-level access model;
 - UUID-based mounts in `/etc/fstab`;
