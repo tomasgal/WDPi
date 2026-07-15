@@ -1,0 +1,4 @@
+# Replace placeholder UUIDs with local filesystem UUIDs.
+# The parent data filesystem must be mounted before the nested upload filesystem.
+UUID=<PRIMARY-DATA-UUID> /ftp ext4 defaults,noatime,nofail,acl 0 2
+UUID=<UPLOAD-DATA-UUID> /ftp/upload ext4 defaults,noatime,nofail,acl 0 2
