@@ -1,0 +1,17 @@
+# Include this section in smb.conf after reviewing local account groups.
+[ftp]
+comment = WDPi file pool
+path = /ftp
+writable = yes
+public = no
+valid users = @users
+create mask = 0664
+directory mask = 2775
+hide files = /@eaDir/@tmp/lost+found/_dlna/
+dont descend = /@eaDir/@tmp/lost+found/_dlna/
+delete veto files = yes
+hide unreadable = yes
+case sensitive = true
+default case = lower
+preserve case = no
+short preserve case = no
