@@ -2,6 +2,8 @@
 
 This document describes the sanitized logical configuration observed and repaired in July 2026. It intentionally omits credentials, public hostnames, routable addresses, real filesystem UUIDs, and private filenames.
 
+The server was not revived from an abandoned state for this work. It had remained in continuous practical use since the original NAS deployment, while its role and configuration evolved over time. The July 2026 maintenance consolidated the existing Samba and FTP setup and added a new isolated scan-to-FTP destination for a multifunction printer.
+
 ## Platform
 
 - Raspberry Pi Compute Module 3 era hardware
@@ -122,7 +124,7 @@ The broad anonymous FTP operation switches are constrained by filesystem ACLs. T
 
 ## Scanner / multifunction printer integration
 
-The isolated FTP account is intended for a network multifunction printer's FTP address-book or scan-to-FTP function.
+The isolated FTP account was added in July 2026 as a new function of the continuously used server. It is intended for a network multifunction printer's FTP address-book or scan-to-FTP feature.
 
 A typical printer entry uses:
 
