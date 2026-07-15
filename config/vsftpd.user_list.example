@@ -1,0 +1,7 @@
+# Positive vsftpd login allowlist.
+# Replace placeholders with local account names.
+primary-user
+secondary-user
+scanner
+anonymous
+ftp
