@@ -1,0 +1,3 @@
+# The scanner sees this physical directory as FTP path /.
+local_root=/ftp/scanner
+allow_writeable_chroot=YES
