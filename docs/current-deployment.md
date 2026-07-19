@@ -2,7 +2,7 @@
 
 This document describes the sanitized logical configuration observed and repaired in July 2026. It intentionally omits credentials, public hostnames, routable addresses, real filesystem UUIDs, and private filenames.
 
-The server was not revived from an abandoned state for this work. It had remained in continuous practical use since the original NAS deployment, while its role and configuration evolved over time. The July 2026 maintenance consolidated the existing Samba and FTP setup and added a new isolated scan-to-FTP destination for a multifunction printer.
+The server was not revived from an abandoned state for this work. It had remained in continuous practical use since the original NAS deployment, while its role and configuration evolved over time. The July 2026 maintenance consolidated the existing Samba and FTP setup, added a new isolated scan-to-FTP destination for a multifunction printer, and restored a live read-only MiniHTTPD view of the current storage tree.
 
 ## Platform
 
@@ -36,7 +36,7 @@ Kingston USB filesystem
 
 The data filesystems are mounted by UUID through `/etc/fstab`. The nested mount order matters: `/ftp` must exist before `/ftp/upload` is mounted.
 
-Both data entries use `nofail`, so failure of removable or external storage does not prevent the base system and SSH from booting. A systemd override adds `RequiresMountsFor=/ftp /ftp/upload` to vsftpd, preventing FTP from starting against empty mount-point directories on the system filesystem.
+Both data entries use `nofail`, so failure of removable or external storage does not prevent the base system and SSH from booting. A systemd override adds `RequiresMountsFor=/ftp /ftp/upload` to vsftpd, preventing FTP from starting against empty mount-point directories on the system filesystem. Separate overrides require `/ftp` before Samba and MiniHTTPD start, because their share root, web root, and application logs are located on the data filesystem.
 
 See:
 
@@ -62,19 +62,29 @@ The service uses a positive user allowlist. The global local root is `/ftp`; a p
 
 The installation currently uses plain FTP for compatibility with embedded and legacy clients. TLS is not enabled in the documented active configuration.
 
+### Read-only web directory view
+
+MiniHTTPD binds to a local-network address and serves `/ftp` as a live directory tree. It provides browser-based read and download access only; it is not a web file manager and does not provide upload, rename, or delete operations.
+
+The MiniHTTPD service account receives read and traversal access through POSIX ACLs. Filesystem recovery directories such as `lost+found` remain inaccessible. The view otherwise covers the server-wide storage tree, including personal areas, `share`, `upload`, the scanner directory, and operational files intentionally stored below `/ftp`.
+
+This web view is deliberately broader than the isolated FTP view presented to the scanner account. The scanner's FTP login is chrooted into one private directory, while MiniHTTPD presents a single server-wide read-only view. Access control for the web service is therefore primarily network-level: it is intended only for a trusted LAN and must not be exposed as a public web interface.
+
 ## Access model
 
 `R` means list/read/traverse. `RW` means create, modify, rename and delete where supported by the FTP or Samba client.
 
-| Area | Primary user | Secondary user | Anonymous FTP | Scanner account |
-|---|---:|---:|---:|---:|
-| Primary personal area | RW | R | none | none |
-| Secondary personal area | R | RW | none | none |
-| `share` | RW | RW | R | none |
-| `upload` | RW | RW | RW | none |
-| `scanner` | R | R | none | RW |
+| Area | Primary user | Secondary user | Anonymous FTP | Scanner account | MiniHTTPD LAN view |
+|---|---:|---:|---:|---:|---:|
+| Primary personal area | RW | R | none | none | R |
+| Secondary personal area | R | RW | none | none | R |
+| `share` | RW | RW | R | none | R |
+| `upload` | RW | RW | RW | none | R |
+| `scanner` | R | R | none | RW | R |
 
 The scanner account is chrooted directly into its own directory. For that account, FTP path `/` maps to the physical directory `/ftp/scanner`; it cannot see `/ftp`, `share`, `upload`, or either personal area.
+
+MiniHTTPD does not impersonate any FTP account. Its separate service account has read-only ACL access to the directories shown above, so the web view does not reproduce the per-account FTP isolation model.
 
 ## ACL strategy
 
@@ -87,6 +97,7 @@ Important consequences:
 - the two authenticated users have reciprocal read-only ACL access to personal directories;
 - both authenticated users have read/write access in `share` and `upload`;
 - the scanner owns its directory, while the two authenticated users receive read-only ACL entries;
+- the MiniHTTPD service account receives read and traversal access without write access;
 - `other::---` is used on controlled directories;
 - default ACLs are used so that newly created files inherit the intended policy.
 
@@ -142,6 +153,8 @@ TLS/SSL:           disabled for the current compatibility setup
 
 The service name is only a label stored by the printer. The subdirectory `/` is correct because the account's FTP root is already mapped to its private physical directory.
 
+Files stored in the scanner directory are also available through the MiniHTTPD directory tree as read-only web content on the local network. This gives users a simple browser-based way to retrieve printer uploads without granting the printer access to the rest of the FTP hierarchy.
+
 Server-side login, listing and upload were tested successfully. A physical scan from the printer remains a separate on-site acceptance test.
 
 ## Configuration files
@@ -155,33 +168,37 @@ The repository includes sanitized examples for:
 - the PAM policy used by vsftpd;
 - the Samba share;
 - the two data mounts in `/etc/fstab`;
-- the systemd mount dependency;
+- the vsftpd systemd mount dependency;
 - the intended ACL layout.
 
 Placeholders must be replaced locally. Do not commit real passwords, password hashes, public DNS names, IP addresses, or filesystem UUIDs.
 
 ## Verified behavior
 
-The following paths were tested through the FTP protocol, not only with local `ls` or `test` commands:
+The following paths were tested through the relevant network protocols, not only with local `ls` or `test` commands:
 
-- anonymous login succeeds;
+- anonymous FTP login succeeds;
 - anonymous listing and download from `share` succeeds;
 - anonymous upload into `share` fails;
 - anonymous upload, listing and deletion in `upload` succeeds;
 - anonymous entry into personal directories fails;
-- authenticated login succeeds;
+- authenticated FTP login succeeds;
 - an authenticated user can write to the user's own personal area;
 - the same user can read but not write to the other personal area;
 - authenticated write into `share` succeeds;
 - newly created content in `share` is readable anonymously;
 - the scanner account logs in, sees an empty `/`, and can upload there;
 - a normal authenticated user can read the scanner-created test file;
+- the MiniHTTPD root responds successfully over HTTP on the local network;
+- MiniHTTPD presents the `/ftp` tree and provides read-only access to the scanner storage directory;
+- MiniHTTPD continues writing to its active log after log rotation using `copytruncate`;
 - vsftpd remains active after adding the mount dependency.
 
 ## Remaining operational checks
 
-- perform a cold reboot and confirm that `/ftp`, `/ftp/upload`, and vsftpd all become active in the intended order;
+- perform a future cold reboot when operationally convenient and confirm that `/ftp`, `/ftp/upload`, vsftpd, Samba, and MiniHTTPD all become active in the intended order;
 - perform an actual scan-to-FTP operation from the multifunction printer;
 - verify the second authenticated FTP account end-to-end after any future password or ACL changes;
 - plan migration from the obsolete operating-system release;
-- consider TLS, VPN-only exposure, or another encrypted transfer path where client compatibility permits it.
+- consider TLS, VPN-only exposure, or another encrypted transfer path where client compatibility permits it;
+- keep MiniHTTPD bound to a trusted local network and do not expose its server-wide directory view publicly.
