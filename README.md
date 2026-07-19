@@ -96,6 +96,7 @@ Detailed current documentation is available in:
 README.md                         Historical and current project overview
 rc.local                         Historical boot workflow
 mini-httpd.conf                  Historical MiniHTTPD example
+wdpi_current_2026.jpg            Current hardware state in July 2026
 config/                          Sanitized current configuration examples
 docs/current-deployment.md       Current topology and access model
 docs/maintenance-2026-07-15.md   Consolidated maintenance record
@@ -103,11 +104,19 @@ docs/maintenance-2026-07-15.md   Consolidated maintenance record
 
 ## Images
 
-WDPi project image:
+### Current WDPi hardware state (July 2026)
+
+The current assembly uses the original Compute Module and SATA adapter platform with attached USB network and storage devices.
+
+![Current WDPi hardware state, July 2026](wdpi_current_2026.jpg)
+
+### Historical images
+
+Original WDPi project image:
 
 ![WDPi project image](wdpi.gif)
 
-WDPi picture of later version:
+Later project revision:
 
 ![WDPi later version](wdpi_rev1.jpg)
 
