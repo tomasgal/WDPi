@@ -2,7 +2,7 @@
 
 This document describes the sanitized logical configuration observed and repaired in July 2026. It intentionally omits credentials, public hostnames, routable addresses, real filesystem UUIDs, and private filenames.
 
-The server was not revived from an abandoned state for this work. It had remained in continuous practical use since the original NAS deployment, while its role and configuration evolved over time. The July 2026 maintenance consolidated the existing Samba and FTP setup, added a new isolated scan-to-FTP destination for a multifunction printer, and restored a live read-only MiniHTTPD view of the current storage tree.
+The server was not revived from an abandoned state for this work. It had remained in continuous practical use since the original NAS deployment, while its role and configuration evolved over time. The July 2026 maintenance consolidated the existing Samba and FTP setup, added a new isolated scan-to-FTP destination for a multifunction printer, restored a live read-only MiniHTTPD view of the current storage tree, and replaced the active packaged Samba 4.2 daemons with a native Samba 4.10.18 build.
 
 ## Platform
 
@@ -42,6 +42,22 @@ See:
 
 - `config/fstab.data.example`
 - `config/systemd/vsftpd.service.d/mounts.conf`
+- `config/systemd/smbd.service.example`
+- `config/systemd/nmbd.service.example`
+
+## Network configuration
+
+The Wi-Fi interface is associated and authenticated by `wpa_supplicant`, while IPv4 configuration is obtained by `dhclient` under `networking.service`.
+
+A second DHCP manager, `dhcpcd`, had also been enabled. Its logs showed that it had previously removed the active IPv4 address, connected route, and default route from the Wi-Fi interface while `dhclient` was managing the same lease. This duplicate network-management path was disabled and masked. Post-reboot validation confirmed that:
+
+- `wpa_supplicant` starts normally;
+- one `dhclient` process manages the Wi-Fi interface;
+- `dhcpcd` remains masked and does not run;
+- the expected IPv4 address, connected route, and default route are restored at boot;
+- SSH and authenticated SMB access are available after startup.
+
+`dhcpcd` was not a Wi-Fi driver. The USB Wi-Fi device remains controlled by the kernel driver, with `wpa_supplicant` providing wireless association and `dhclient` providing DHCP configuration.
 
 ## Network services
 
@@ -49,7 +65,35 @@ See:
 
 Samba exposes `/ftp` as one authenticated share. Access inside the tree is controlled by Unix ownership and POSIX ACLs rather than by separate Samba shares for every directory.
 
-The sanitized share definition is in `config/samba-share.conf.example`.
+The active production daemons are Samba 4.10.18 binaries installed under `/opt/samba-4.10.18`. The packaged Samba 4.2 installation remains present, but its daemon binaries are not used by the active services.
+
+Two native systemd units start:
+
+```text
+/opt/samba-4.10.18/sbin/smbd
+/opt/samba-4.10.18/sbin/nmbd
+```
+
+Both services use the single shared configuration file:
+
+```text
+/etc/samba/smb.conf
+```
+
+The service units run the daemons in the foreground with `--no-process-group`, provide the required runtime, state, cache, private and PID directories, and depend on `/ftp` through `RequiresMountsFor=/ftp`.
+
+Post-reboot validation confirmed:
+
+- `smbd.service` and `nmbd.service` are active and enabled;
+- all active Samba processes resolve to `/opt/samba-4.10.18` and report version 4.10.18;
+- `smbd` listens on TCP 139 and 445;
+- `nmbd` listens on UDP 137 and 138;
+- authenticated access to the production share succeeds;
+- directory listing succeeds after reboot.
+
+Multiple `smbd` processes are expected: Samba uses a parent daemon and helper or per-client processes. They do not indicate duplicate Samba installations.
+
+The sanitized share definition is in `config/samba-share.conf.example`. Sanitized production service units are in `config/systemd/smbd.service.example` and `config/systemd/nmbd.service.example`.
 
 ### FTP
 
@@ -167,8 +211,9 @@ The repository includes sanitized examples for:
 - the FTP welcome banner;
 - the PAM policy used by vsftpd;
 - the Samba share;
+- the production Samba systemd units;
 - the two data mounts in `/etc/fstab`;
-- the vsftpd systemd mount dependency;
+- the service mount dependencies;
 - the intended ACL layout.
 
 Placeholders must be replaced locally. Do not commit real passwords, password hashes, public DNS names, IP addresses, or filesystem UUIDs.
@@ -192,11 +237,13 @@ The following paths were tested through the relevant network protocols, not only
 - the MiniHTTPD root responds successfully over HTTP on the local network;
 - MiniHTTPD presents the `/ftp` tree and provides read-only access to the scanner storage directory;
 - MiniHTTPD continues writing to its active log after log rotation using `copytruncate`;
-- vsftpd remains active after adding the mount dependency.
+- vsftpd remains active after adding the mount dependency;
+- a full reboot restores the expected data mounts, network configuration and production Samba services;
+- Samba 4.10.18 provides authenticated SMB access after reboot;
+- the duplicate `dhcpcd` network manager remains disabled and masked after reboot.
 
 ## Remaining operational checks
 
-- perform a future cold reboot when operationally convenient and confirm that `/ftp`, `/ftp/upload`, vsftpd, Samba, and MiniHTTPD all become active in the intended order;
 - perform an actual scan-to-FTP operation from the multifunction printer;
 - verify the second authenticated FTP account end-to-end after any future password or ACL changes;
 - plan migration from the obsolete operating-system release;
