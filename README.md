@@ -9,7 +9,7 @@ The same device has remained in continuous practical use since the original depl
 - it preserves the original hardware build and boot-time configuration;
 - it documents the server's later evolution as a Samba and FTP storage appliance.
 
-In July 2026, the existing server configuration was consolidated, a dedicated scan-to-FTP destination was added for a network multifunction printer, and the live MiniHTTPD directory view was aligned with the current storage tree.
+In July 2026, the existing server configuration was consolidated, a dedicated scan-to-FTP destination was added for a network multifunction printer, the live MiniHTTPD directory view was aligned with the current storage tree, and Samba 4.10.18 was compiled natively on the original Compute Module hardware as a documented legacy compatibility artifact.
 
 This is a historical build log and a sanitized configuration snapshot, not a maintained NAS distribution or a secure-by-default deployment image.
 
@@ -90,6 +90,18 @@ Detailed current documentation is available in:
 - [`docs/maintenance-2026-07-15.md`](docs/maintenance-2026-07-15.md) — consolidated maintenance and validation record;
 - [`config/`](config/) — sanitized examples of the active Samba, vsftpd, PAM, ACL, mount and systemd configuration.
 
+## Native Samba 4.10.18 build
+
+In July 2026, Samba 4.10.18 was compiled directly on the physical WDPi Compute Module 3 rather than cross-compiled on another system. The build used Raspbian GNU/Linux 8 Jessie, GCC 4.9.2, binutils 2.25 and Python 2.7.9 for Waf.
+
+The resulting binaries use a 32-bit ARM EABI5 hard-float ABI with an ARMv6/VFPv2 instruction baseline and install under `/opt/samba-4.10.18`, alongside rather than over the packaged Samba 4.2 installation.
+
+Recorded work took approximately 1 hour 40 minutes for configuration, compilation and staged installation. The build was validated with an isolated `smbd` instance on `127.0.0.1:1445`, successful directory listing and file upload, and a full dynamic-dependency audit with no unresolved ELF dependencies on the build host.
+
+The [`samba/`](samba/) directory contains the build provenance, host metadata, feature matrix, ABI record and source checksum. Binary and source archives are intended to be distributed as GitHub Release assets rather than committed as ordinary repository files.
+
+This legacy build is preserved for historical and compatibility purposes. Samba 4.10.18 and Raspbian Jessie are obsolete and should not be treated as a current secure-by-default platform.
+
 ## Repository layout
 
 ```text
@@ -100,6 +112,7 @@ wdpi_current_2026.jpg            Current hardware state in July 2026
 config/                          Sanitized current configuration examples
 docs/current-deployment.md       Current topology and access model
 docs/maintenance-2026-07-15.md   Consolidated maintenance record
+samba/                           Native Samba 4.10.18 build documentation
 ```
 
 ## Images
@@ -128,6 +141,7 @@ Later project revision:
 - The MiniHTTPD view covers the server-wide `/ftp` tree and is therefore broader than the isolated views presented to individual FTP accounts.
 - Anonymous write access is intentionally restricted to one ACL-controlled upload filesystem.
 - The repository configurations are sanitized examples and must be reviewed before use on another system.
+- The native Samba 4.10.18 build is a legacy compatibility artifact, not a maintained security release.
 - This setup should not be exposed to an untrusted network without current packages, restricted network access, firewalling, logging, transport security and a fresh security review.
 
 ## Authorship and media rights
