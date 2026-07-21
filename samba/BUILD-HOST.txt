@@ -1,0 +1,36 @@
+Captured: 2026-07-21T18:25:57+0200
+
+Linux ftp 4.9.51-v7+ #1036 SMP Fri Sep 22 19:49:07 BST 2017 armv7l GNU/Linux
+
+PRETTY_NAME="Raspbian GNU/Linux 8 (jessie)"
+NAME="Raspbian GNU/Linux"
+VERSION_ID="8"
+VERSION="8 (jessie)"
+ID=raspbian
+ID_LIKE=debian
+
+Architecture:          armv7l
+Byte Order:            Little Endian
+CPU(s):                4
+On-line CPU(s) list:   0-3
+Thread(s) per core:    1
+Core(s) per socket:    4
+Socket(s):             1
+Model name:            ARMv7 Processor rev 4 (v7l)
+CPU max MHz:           1200.0000
+CPU min MHz:           600.0000
+
+Memory at metadata capture:
+Total RAM:             976 MiB
+Available after cache: approximately 881 MiB
+Swap:                  99 MiB
+
+Toolchain:
+gcc (Raspbian 4.9.2-10+deb8u2) 4.9.2
+GNU ld (GNU Binutils for Raspbian) 2.25
+Python 2.7.9
+
+Hardware:
+Model: Raspberry Pi Compute Module 3 Rev 1.0
+Hardware: BCM2835
+Revision: a020a0
