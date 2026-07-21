@@ -9,7 +9,7 @@ The same device has remained in continuous practical use since the original depl
 - it preserves the original hardware build and boot-time configuration;
 - it documents the server's later evolution as a Samba and FTP storage appliance.
 
-In July 2026, the existing server configuration was consolidated, a dedicated scan-to-FTP destination was added for a network multifunction printer, the live MiniHTTPD directory view was aligned with the current storage tree, and Samba 4.10.18 was compiled natively on the original Compute Module hardware as a documented legacy compatibility artifact.
+In July 2026, the existing server configuration was consolidated, a dedicated scan-to-FTP destination was added for a network multifunction printer, the live MiniHTTPD directory view was aligned with the current storage tree, and Samba 4.10.18 was compiled natively on the original Compute Module hardware as a documented legacy compatibility artifact. The new Samba build was subsequently deployed as the production `smbd` and `nmbd` implementation and validated after a full reboot.
 
 This is a historical build log and a sanitized configuration snapshot, not a maintained NAS distribution or a secure-by-default deployment image.
 
@@ -87,7 +87,8 @@ The public repository intentionally excludes passwords, password hashes, public 
 Detailed current documentation is available in:
 
 - [`docs/current-deployment.md`](docs/current-deployment.md) — storage topology, services and access model;
-- [`docs/maintenance-2026-07-15.md`](docs/maintenance-2026-07-15.md) — consolidated maintenance and validation record;
+- [`docs/maintenance-2026-07-15.md`](docs/maintenance-2026-07-15.md) — consolidated FTP, ACL and mount maintenance record;
+- [`docs/maintenance-2026-07-21.md`](docs/maintenance-2026-07-21.md) — production Samba migration, DHCP cleanup and reboot validation;
 - [`config/`](config/) — sanitized examples of the active Samba, vsftpd, PAM, ACL, mount and systemd configuration.
 
 ## Native Samba 4.10.18 build
@@ -96,9 +97,9 @@ In July 2026, Samba 4.10.18 was compiled directly on the physical WDPi Compute M
 
 The resulting binaries use a 32-bit ARM EABI5 hard-float ABI with an ARMv6/VFPv2 instruction baseline and install under `/opt/samba-4.10.18`, alongside rather than over the packaged Samba 4.2 installation.
 
-Recorded work took approximately 1 hour 40 minutes for configuration, compilation and staged installation. The build was validated with an isolated `smbd` instance on `127.0.0.1:1445`, successful directory listing and file upload, and a full dynamic-dependency audit with no unresolved ELF dependencies on the build host.
+Recorded work took approximately 1 hour 40 minutes for configuration, compilation and staged installation. The build was first validated with an isolated `smbd` instance on `127.0.0.1:1445`, successful directory listing and file upload, and a full dynamic-dependency audit with no unresolved ELF dependencies on the build host. It was then deployed through native systemd units as the production `smbd` and `nmbd`, using the existing `/etc/samba/smb.conf`, and successfully validated after reboot on TCP ports 139/445 and UDP ports 137/138.
 
-The [`samba/`](samba/) directory contains the build provenance, host metadata, feature matrix, ABI record and source checksum. Binary and source archives are intended to be distributed as GitHub Release assets rather than committed as ordinary repository files.
+The [`samba/`](samba/) directory contains the build provenance, host metadata, feature matrix, ABI record and source checksum. Binary and source archives are distributed as GitHub Release assets rather than committed as ordinary repository files.
 
 This legacy build is preserved for historical and compatibility purposes. Samba 4.10.18 and Raspbian Jessie are obsolete and should not be treated as a current secure-by-default platform.
 
@@ -111,7 +112,8 @@ mini-httpd.conf                  Historical MiniHTTPD example
 wdpi_current_2026.jpg            Current hardware state in July 2026
 config/                          Sanitized current configuration examples
 docs/current-deployment.md       Current topology and access model
-docs/maintenance-2026-07-15.md   Consolidated maintenance record
+docs/maintenance-2026-07-15.md   FTP, ACL and mount maintenance record
+docs/maintenance-2026-07-21.md   Samba migration and reboot validation
 samba/                           Native Samba 4.10.18 build documentation
 ```
 

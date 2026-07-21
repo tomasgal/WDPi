@@ -46,7 +46,7 @@ GnuTLS development support was unavailable on the build host. The selected stand
 
 The resulting binaries were installed under `/opt/samba-4.10.18` alongside, rather than over, the system Samba 4.2 installation.
 
-Validation included:
+Initial isolated validation included:
 
 - `smbd`, `smbclient` and `testparm` reporting version 4.10.18;
 - complete dynamic dependency resolution on the build host;
@@ -55,18 +55,32 @@ Validation included:
 - successful SMB file upload;
 - clean shutdown of the isolated test server.
 
+The build was subsequently deployed as the production Samba implementation. Native systemd units start `/opt/samba-4.10.18/sbin/smbd` and `/opt/samba-4.10.18/sbin/nmbd`, both using the existing `/etc/samba/smb.conf`. The packaged Samba 4.2 files remain installed for rollback and dependency compatibility, but do not provide the active SMB or NetBIOS daemons.
+
+Post-reboot production validation confirmed:
+
+- both `smbd.service` and `nmbd.service` active and enabled;
+- every active Samba daemon resolving to `/opt/samba-4.10.18` and reporting version 4.10.18;
+- `smbd` listening on TCP 139 and 445;
+- `nmbd` listening on UDP 137 and 138;
+- successful authenticated access to the production share and directory listing after reboot;
+- correct startup after the `/ftp` data mount became available.
+
+Sanitized service definitions are stored under `config/systemd/`.
+
 ## Distribution artifacts
 
-The corresponding GitHub release is intended to contain:
+The corresponding GitHub release contains:
 
 - `samba-4.10.18-rpi-armhf-runtime.tar.xz` — the validated `/opt/samba-4.10.18` runtime tree;
 - `samba-4.10.18.tar.gz` — the exact upstream source archive used for the build;
 - `SHA256SUMS` — checksums for the published archives.
 
-The upstream source archive used for the build has SHA-256:
+Published SHA-256 checksums:
 
 ```text
-7dcfc2aaaac565b959068788e6a43fc79ce2a03e7d523f5843f7a9fddffc7c2c
+0605b291968a2591c5dcdc50aa7b92c20df9b8190f63bd19b7b286984c224837  samba-4.10.18-rpi-armhf-runtime.tar.xz
+7dcfc2aaaac565b959068788e6a43fc79ce2a03e7d523f5843f7a9fddffc7c2c  samba-4.10.18.tar.gz
 ```
 
 ## Compatibility
@@ -90,6 +104,7 @@ The ARMv6 ELF baseline does not by itself guarantee compatibility with every ARM
 - [`BUILD-HOST.txt`](BUILD-HOST.txt)
 - [`ELF-ABI.txt`](ELF-ABI.txt)
 - [`SOURCE-SHA256.txt`](SOURCE-SHA256.txt)
+- [`../docs/maintenance-2026-07-21.md`](../docs/maintenance-2026-07-21.md)
 
 ## Security and maintenance status
 

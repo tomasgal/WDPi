@@ -1,0 +1,17 @@
+[Unit]
+Description=Samba SMB daemon 4.10.18
+Wants=network-online.target
+After=network-online.target local-fs.target
+RequiresMountsFor=/ftp
+
+[Service]
+Type=simple
+ExecStartPre=/bin/mkdir -p /var/run/samba /var/lib/samba /var/cache/samba /var/lib/samba/private
+ExecStart=/opt/samba-4.10.18/sbin/smbd --foreground --no-process-group -s /etc/samba/smb.conf "--option=lock directory=/var/run/samba" "--option=state directory=/var/lib/samba" "--option=cache directory=/var/cache/samba" "--option=private dir=/var/lib/samba/private" "--option=pid directory=/var/run/samba"
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=3
+LimitNOFILE=16384
+
+[Install]
+WantedBy=multi-user.target
