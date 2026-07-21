@@ -1,0 +1,43 @@
+Software: Samba 4.10.18
+Install prefix: /opt/samba-4.10.18
+
+Build method:
+Native compilation on physical target hardware.
+No cross-compilation, emulation, container, virtual machine, or chroot was used.
+
+Build host:
+Raspberry Pi Compute Module 3 Rev 1.0
+Raspbian GNU/Linux 8 (Jessie)
+32-bit ARMv7 hard-float userspace
+
+Configure command:
+PYTHON=python2 ./configure \
+  --prefix=/opt/samba-4.10.18 \
+  --without-ad-dc \
+  --disable-python \
+  --disable-cups \
+  --without-json \
+  --without-ldap \
+  --without-ads
+
+Build command:
+make -j1
+
+Staging installation command:
+make install DESTDIR=/ftp/build/samba-stage
+
+Recorded timings:
+Configure (Waf):          10m 10.151s
+Build (Waf):              1h 17m 40.253s
+Build wall-clock (real):  1h 17m 46.320s
+Staging install (Waf):    12m 1.496s
+
+Total recorded wall-clock time for configure, build, and staging install:
+Approximately 1h 40m
+
+Validation:
+- smbd, smbclient, and testparm reported version 4.10.18.
+- All smbd runtime libraries resolved; no dependency was reported as "not found".
+- An isolated smbd instance successfully listened on 127.0.0.1:1445.
+- Anonymous SMB directory listing and file upload completed successfully.
+- The packaged Samba tree remained separate from the system Samba 4.2 installation.
