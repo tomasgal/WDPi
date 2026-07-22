@@ -89,7 +89,8 @@ Detailed current documentation is available in:
 - [`docs/current-deployment.md`](docs/current-deployment.md) — storage topology, services and access model;
 - [`docs/maintenance-2026-07-15.md`](docs/maintenance-2026-07-15.md) — consolidated FTP, ACL and mount maintenance record;
 - [`docs/maintenance-2026-07-21.md`](docs/maintenance-2026-07-21.md) — production Samba migration, DHCP cleanup and reboot validation;
-- [`config/`](config/) — sanitized examples of the active Samba, vsftpd, PAM, ACL, mount and systemd configuration.
+- [`docs/maintenance-2026-07-22.md`](docs/maintenance-2026-07-22.md) — legacy Wi-Fi driver stabilization, router adjustments and BSSID rollback;
+- [`config/`](config/) — sanitized examples of the active Samba, vsftpd, PAM, ACL, mount, systemd, wireless driver and sysctl configuration.
 
 ## Native Samba 4.10.18 build
 
@@ -114,6 +115,7 @@ config/                          Sanitized current configuration examples
 docs/current-deployment.md       Current topology and access model
 docs/maintenance-2026-07-15.md   FTP, ACL and mount maintenance record
 docs/maintenance-2026-07-21.md   Samba migration and reboot validation
+docs/maintenance-2026-07-22.md   Wi-Fi driver and router maintenance
 samba/                           Native Samba 4.10.18 build documentation
 ```
 
